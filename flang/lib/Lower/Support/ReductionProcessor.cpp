@@ -578,11 +578,10 @@ OpType ReductionProcessor::createDeclareReduction(
   // variable, `real` should be stored.
   mlir::TypeAttr boxedTy{};
 
-  if (!isByRef)
-    type = valTy;
-
   if (isByRef)
     boxedTy = mlir::TypeAttr::get(fir::unwrapPassByRefType(valTy));
+  else
+    type = valTy;
 
   decl = OpType::create(modBuilder, loc, reductionOpName, type, boxedTy);
   createReductionAllocAndInitRegions(converter, loc, decl, redId, type,
