@@ -20,6 +20,7 @@
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/InitializePasses.h"
+#include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
 
@@ -77,14 +78,25 @@ void OptimizationRemarkEmitter::computeHotness(
 void OptimizationRemarkEmitter::emit(
     DiagnosticInfoOptimizationBase &OptDiagBase) {
   auto &OptDiag = cast<DiagnosticInfoIROptimization>(OptDiagBase);
+  
+  // DEBUG: Print when a remark is being attempted
+  errs() << "[ORE] Attempting to emit remark: Pass=" << OptDiag.getPassName()
+         << ", Remark=" << OptDiag.getRemarkName()
+         << ", Function=" << F->getName() << "\n";
+  
   computeHotness(OptDiag);
 
   // Only emit it if its hotness meets the threshold.
-  if (OptDiag.getHotness().getValueOr(0) <
-      F->getContext().getDiagnosticsHotnessThreshold()) {
+  uint64_t Hotness = OptDiag.getHotness().getValueOr(0);
+  uint64_t Threshold = F->getContext().getDiagnosticsHotnessThreshold();
+  if (Hotness < Threshold) {
+    errs() << "[ORE] Remark filtered out: Hotness=" << Hotness
+           << " < Threshold=" << Threshold << "\n";
     return;
   }
 
+  errs() << "[ORE] Remark passed hotness check: Hotness=" << Hotness
+         << " >= Threshold=" << Threshold << "\n";
   F->getContext().diagnose(OptDiag);
 }
 

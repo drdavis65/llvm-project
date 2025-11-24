@@ -18,6 +18,7 @@
 #include "llvm/Remarks/RemarkStreamer.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/ToolOutputFile.h"
+#include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
 
@@ -78,8 +79,18 @@ LLVMRemarkStreamer::toRemark(const DiagnosticInfoOptimizationBase &Diag) const {
 }
 
 void LLVMRemarkStreamer::emit(const DiagnosticInfoOptimizationBase &Diag) {
-  if (!RS.matchesFilter(Diag.getPassName()))
-      return;
+  // DEBUG: Print when a remark reaches the streamer
+  errs() << "[LLVMRemarkStreamer] Remark reached streamer: Pass="
+         << Diag.getPassName() << ", Remark=" << Diag.getRemarkName() << "\n";
+  
+  if (!RS.matchesFilter(Diag.getPassName())) {
+    errs() << "[LLVMRemarkStreamer] Remark filtered out by pass filter: Pass="
+           << Diag.getPassName() << "\n";
+    return;
+  }
+
+  errs() << "[LLVMRemarkStreamer] Writing remark to file: Pass="
+         << Diag.getPassName() << ", Remark=" << Diag.getRemarkName() << "\n";
 
   // First, convert the diagnostic to a remark.
   remarks::Remark R = toRemark(Diag);

@@ -48,6 +48,7 @@
 #include "llvm/IR/PassManagerInternal.h"
 #include "llvm/Support/TimeProfiler.h"
 #include "llvm/Support/TypeName.h"
+#include "llvm/Support/raw_ostream.h"
 #include <cassert>
 #include <cstring>
 #include <iterator>
@@ -515,6 +516,10 @@ public:
       // false).
       if (!PI.runBeforePass<IRUnitT>(*P, IR))
         continue;
+
+      // DEBUG: Print when a pass is being executed
+      errs() << "[PassManager] Executing pass: " << P->name()
+             << " on IR unit: " << IR.getName() << "\n";
 
       PreservedAnalyses PassPA;
       {
